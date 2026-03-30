@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>For You ❤️ RICHA </title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff7eb3;
+            --secondary: #ff758c;
+            --accent: #ff4d6d;
+            --glass: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --text: #fff;
+            --dark-text: #4a4a4a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+            height: 100vh;
+            overflow: hidden;
+            color: var(--text);
+            position: relative;
+        }
+
+        /* --- Canvas Background --- */
+        #bg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* --- UI Containers --- */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .screen.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: scale(1);
+        }
+
+        .screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(1.1);
+        }
+
+        /* --- Music Control --- */
+        .music-control {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 1px solid var(--glass-border);
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .music-control:active { transform: scale(0.9); }
+
+        /* --- STEP 1: Hero --- */
+        #hero-screen {
+            background: radial-gradient(circle at center, #bb197a 0%, #2e1111 100%);
+        }
+        
+        .surprise-btn {
+            background: linear-gradient(45deg, #ff3366, #d64990);
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.5rem;
+            color: white;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 51, 102, 0.5);
+            animation: pulse 2s infinite;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s;
+            font-family:'Dancing Script', cursive;
+        }
+        
+        .surprise-btn:active { transform: scale(0.95); }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 51, 102, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(255, 51, 102, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 51, 102, 0); }
+        }
+
+        /* --- STEP 2: Bouquet --- */
+        .bouquet-container {
+            font-size: 10rem;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+            transform: scale(0);
+            transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: grab;
+        }
+        .bouquet-hint {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            animation: bounce 2s infinite;
+        }
+
+        /* --- STEP 3: Message --- */
+        .typewriter {
+            font-family: 'Dancing Script', cursive;
+            font-size: 3rem;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            color: #fff;
+            text-align: center;
+        }
+        .tap-hint {
+            margin-top: 30px;
+            font-size: 0.8rem;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            animation: fadeIn 2s infinite alternate;
+        }
+
+        /* --- STEP 4: Name Reveal --- */
+        .name-reveal {
+            font-family: 'Dancing Script', cursive;
+            font-size: 4rem;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(255,255,255,0.6);
+            transform: scale(0.8);
+            opacity: 0;
+            transition: all 0.8s ease;
+        }
+        .name-reveal.show {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        /* --- STEP 5: 3D Carousel (The Core) --- */
+        #carousel-screen {
+            perspective: 1000px;
+            overflow: hidden;
+            /* Prevent scrolling on mobile while swiping carousel */
+            touch-action: none; 
+        }
+
+        .carousel-wheel {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            position: absolute;
+            width: 300px;
+            height: 400px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            color: #333;
+            overflow: hidden;
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), 
+                        opacity 0.6s ease, 
+                        filter 0.6s ease;
+            backface-visibility: hidden;
+            border: 4px solid white;
+        }
+
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none; /* Let clicks pass to card */
+        }
+
+        /* --- STEP 6: Finale --- */
+        .finale-text {
+            font-family: 'Dancing Script', cursive;
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .replay-btn {
+            background: rgba(255,255,255,0.3);
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 10px 30px;
+            color: white;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+        .replay-btn:hover { background: rgba(255,255,255,0.5); }
+
+        /* --- Animations --- */
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes fadeIn { from { opacity: 0.4; } to { opacity: 1; } }
+
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+            .card { width: 80%; height: 50vh; }
+            .typewriter { font-size: 2.2rem; }
+            .name-reveal { font-size: 3rem; }
+            .bouquet-container { font-size: 6rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bg-music" loop>
+        <source src="love.mp3" type="audio/mp3">
+    </audio>
+
+    <div class="music-control" id="music-toggle" style="display: none;">
+        🔊
+    </div>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <div id="hero-screen" class="screen active">
+        <button class="surprise-btn" id="start-btn">💘 Press for Surprise 💘</button>
+    </div>
+
+    <div id="bouquet-screen" class="screen">
+        <div class="bouquet-container" id="bouquet">💐</div>
+        <div class="bouquet-hint">For You →</div>
+    </div>
+
+    <div id="message-screen" class="screen">
+        <h1 class="typewriter" id="typewriter-text"></h1>
+        <div class="tap-hint">Tap to continue</div>
+    </div>
+
+    <div id="name-screen" class="screen">
+        <div class="name-reveal" id="girl-name">❤️ Richa ❤️</div>
+        <div class="tap-hint">Tap name to continue</div>
+    </div>
+
+    <div id="carousel-screen" class="screen">
+        <div class="carousel-wheel" id="wheel">
+            </div>
+        <div style="position: absolute; bottom: 30px; opacity: 0.7; font-size: 0.9rem;">
+            Swipe / Scroll • Tap Center to Dissolve
+        </div>
+    </div>
+
+    <div id="finale-screen" class="screen">
+        <h1 class="finale-text">Forever With You ❤️</h1>
+        <button class="replay-btn" onclick="location.reload()">Replay</button>
+    </div>
+
+    <script>
+        /* CONFIG 
+           Change the Name and Photo URLs here 
+        */
+        const CONFIG = {
+            girlName: " RICHA ",
+            photos: [
+                "images/pic1.jpeg",
+                "images/pic2.jpeg",
+                "images/pic3.jpeg",
+                "images/pic4.jpeg",
+                "images/pic5.jpeg",
+                "images/pic6.jpeg",
+                "images/pic7.jpeg",
+                "images/pic8.jpeg",
+                "images/pic9.jpeg",
+                "images/pic10.jpeg",
+                "images/pic11.jpeg",
+                "images/pic12.jpeg",
+                "images/pic13.jpeg",
+                "images/pic14.jpeg",
+                "images/pic15.jpeg",
+                "images/pic16.jpeg"
+            ]
+        };
+
+        /* --- STATE MANAGEMENT --- */
+        let state = {
+            activeScreen: 'hero-screen',
+            musicPlaying: false,
+            carouselIndex: 0
+        };
+
+        const screens = ['hero-screen', 'bouquet-screen', 'message-screen', 'name-screen', 'carousel-screen', 'finale-screen'];
+        const audio = document.getElementById('bg-music');
+        const musicBtn = document.getElementById('music-toggle');
+
+        /* --- UTILS --- */
+        function switchScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => {
+                s.classList.remove('active');
+                s.classList.add('hidden');
+            });
+            const target = document.getElementById(id);
+            target.classList.remove('hidden');
+            target.classList.add('active');
+            state.activeScreen = id;
+        }
+
+        function createParticles(x, y, count = 30, type = 'heart') {
+            const container = document.body;
+            for(let i=0; i<count; i++) {
+                const part = document.createElement('div');
+                part.innerText = type === 'heart' ? '❤️' : '✨';
+                part.style.position = 'fixed';
+                part.style.left = x + 'px';
+                part.style.top = y + 'px';
+                part.style.fontSize = Math.random() * 20 + 10 + 'px';
+                part.style.pointerEvents = 'none';
+                part.style.zIndex = '9999';
+                part.style.transition = 'all 1s ease-out';
+                
+                container.appendChild(part);
+
+                // Random explode direction
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = Math.random() * 100 + 50;
+                const tx = Math.cos(angle) * velocity;
+                const ty = Math.sin(angle) * velocity;
+
+                requestAnimationFrame(() => {
+                    part.style.transform = `translate(${tx}px, ${ty}px) scale(0)`;
+                    part.style.opacity = 0;
+                });
+
+                setTimeout(() => part.remove(), 1000);
+            }
+        }
+
+        /* --- STEP 1: START --- */
+        document.getElementById('start-btn').addEventListener('click', (e) => {
+            // Audio Context Fix
+            audio.volume = 0.5;
+            audio.play().then(() => {
+                state.musicPlaying = true;
+                musicBtn.style.display = 'block';
+            }).catch(e => console.log("Audio interaction required"));
+            
+            createParticles(e.clientX, e.clientY, 50);
+            switchScreen('bouquet-screen');
+            setTimeout(() => {
+                document.getElementById('bouquet').style.transform = 'scale(1)';
+            }, 100);
+        });
+
+        musicBtn.addEventListener('click', () => {
+            if(audio.paused) {
+                audio.play();
+                musicBtn.innerText = '🔊';
+            } else {
+                audio.pause();
+                musicBtn.innerText = '🔇';
+            }
+        });
+
+        /* --- STEP 2: BOUQUET (TOUCH/CLICK VERSION) --- */
+        const bouquet = document.getElementById('bouquet');
+        
+        // Jab user bouquet par click ya tap karega
+        bouquet.addEventListener('click', (e) => {
+            // 1. Bouquet ko animate karke gayab karein
+            bouquet.style.transform = "scale(1.2) rotate(10deg) opacity(0)";
+            
+            // 2. Thode particles (effects) dikhayein
+            createParticles(e.clientX || window.innerWidth/2, e.clientY || window.innerHeight/2, 30);
+
+            // 3. Agle screen par jayein (0.5 second baad)
+            setTimeout(() => {
+                initMessageScreen();
+            }, 500);
+        });
+
+        /* --- STEP 3: TYPEWRITER --- */
+        function initMessageScreen() {
+            switchScreen('message-screen');
+            const text = "✨ BESTIE ✨";
+            const el = document.getElementById('typewriter-text');
+            el.innerText = "";
+            let i = 0;
+            const type = setInterval(() => {
+                el.innerText += text.charAt(i);
+                i++;
+                if(i >= text.length) clearInterval(type);
+            }, 100);
+        }
+
+        document.getElementById('message-screen').addEventListener('click', () => {
+            // Explosion
+            createParticles(window.innerWidth/2, window.innerHeight/2, 50, 'star');
+            initNameScreen();
+        });
+
+        /* --- STEP 4: NAME REVEAL --- */
+        function initNameScreen() {
+            switchScreen('name-screen');
+            const nameEl = document.getElementById('girl-name');
+            nameEl.innerText = `❤️ ${CONFIG.girlName} ❤️`;
+            setTimeout(() => {
+                nameEl.classList.add('show');
+            }, 100);
+        }
+
+        document.getElementById('name-screen').addEventListener('click', () => {
+            initCarousel();
+        });
+
+        /* --- STEP 5: 3D CAROUSEL LOGIC --- */
+        let cards = [];
+        const wheel = document.getElementById('wheel');
+        const CARD_COUNT = 15;
+        const RADIUS = 400; // Virtual radius for 3D depth
+
+        function initCarousel() {
+            switchScreen('carousel-screen');
+            wheel.innerHTML = '';
+            
+            // Create cards
+            CONFIG.photos.forEach((src, i) => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `<img src="${src}" draggable="false">`;
+                div.dataset.index = i;
+                
+                // Click handler for Center Dissolve
+                div.addEventListener('click', (e) => {
+                    // Only active if center
+                    const relativePos = i - state.carouselIndex;
+                    if (relativePos === 0) {
+                        performMagicDissolve(div, e);
+                    }
+                });
+
+                wheel.appendChild(div);
+                cards.push(div);
+            });
+            
+            updateCarousel();
+        }
+
+        function updateCarousel() {
+            cards.forEach((card, i) => {
+                const diff = i - state.carouselIndex;
+                const absDiff = Math.abs(diff);
+                
+                // Logic for Vertical 3D Stack
+                // Center is 0. 
+                
+                if (absDiff > 3) {
+                    card.style.opacity = 0;
+                    card.style.display = 'none';
+                } else {
+                    card.style.display = 'flex';
+                    // Y Offset: center is 0, others move up/down
+                    const yTrans = diff * 120; 
+                    // Z Scale: center is largest
+                    const scale = 1 - (absDiff * 0.15);
+                    // Z depth
+                    const zTrans = - (absDiff * 50);
+                    // Blur/Opacity
+                    const blur = absDiff * 3;
+                    const opacity = 1 - (absDiff * 0.3);
+
+                    card.style.transform = `translateY(${yTrans}px) translateZ(${zTrans}px) scale(${scale})`;
+                    card.style.opacity = opacity;
+                    card.style.filter = `blur(${blur}px)`;
+                    card.style.zIndex = 100 - absDiff; // Center on top
+                    
+                    // Highlight center glow
+                    if(diff === 0) {
+                        card.style.boxShadow = "0 0 30px rgba(255, 77, 109, 0.6)";
+                        card.style.border = "4px solid #fff";
+                    } else {
+                        card.style.boxShadow = "0 10px 20px rgba(0,0,0,0.1)";
+                        card.style.border = "none";
+                    }
+                }
+            });
+        }
+
+        // Dissolve Effect
+        function performMagicDissolve(card, e) {
+            const rect = card.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            // 1. Create huge particle burst
+            createParticles(centerX, centerY, 60, 'heart');
+            createParticles(centerX, centerY, 40, 'star');
+
+            // 2. Animate Card Disappearing
+            card.style.transition = "transform 0.5s, opacity 0.5s";
+            card.style.transform = `scale(1.2)`;
+            card.style.opacity = 0;
+
+            // 3. Move next slide
+            setTimeout(() => {
+                if(state.carouselIndex < CARD_COUNT - 1) {
+                    state.carouselIndex++;
+                    updateCarousel();
+                } else {
+                    // Reached end
+                    switchScreen('finale-screen');
+                    triggerConfetti();
+                }
+            }, 400);
+        }
+
+        // Input Handling for Carousel
+        let wheelStartY = 0;
+        let isDragging = false;
+
+        document.getElementById('carousel-screen').addEventListener('wheel', (e) => {
+            if(e.deltaY > 0) nextSlide();
+            else prevSlide();
+        });
+
+        document.getElementById('carousel-screen').addEventListener('touchstart', (e) => {
+            wheelStartY = e.touches[0].clientY;
+        });
+
+        document.getElementById('carousel-screen').addEventListener('touchmove', (e) => {
+            const currentY = e.touches[0].clientY;
+            const diff = wheelStartY - currentY;
+            
+            if(Math.abs(diff) > 50) { // Threshold
+                if(diff > 0) nextSlide();
+                else prevSlide();
+                wheelStartY = currentY; // Reset to prevent rapid firing
+            }
+        });
+
+        function nextSlide() {
+            if(state.carouselIndex < CARD_COUNT - 1) {
+                state.carouselIndex++;
+                updateCarousel();
+            }
+        }
+        function prevSlide() {
+            if(state.carouselIndex > 0) {
+                state.carouselIndex--;
+                updateCarousel();
+            }
+        }
+
+        /* --- STEP 6: FINALE CONFETTI --- */
+        function triggerConfetti() {
+            const colors = ['#ff7eb3', '#ff758c', '#ffffff', '#ffd700'];
+            for(let i=0; i<100; i++) {
+                const conf = document.createElement('div');
+                conf.style.position = 'fixed';
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.top = '-10px';
+                conf.style.width = '10px';
+                conf.style.height = '10px';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animation = `fall ${Math.random() * 3 + 2}s linear forwards`;
+                document.body.appendChild(conf);
+            }
+            
+            // Add CSS rule for falling
+            const style = document.createElement('style');
+            style.innerHTML = `
+                @keyframes fall {
+                    to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        /* --- AMBIENT CANVAS BACKGROUND --- */
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * 15 + 5;
+                this.speedY = Math.random() * 1 + 0.5;
+                this.opacity = Math.random() * 0.5;
+            }
+            update() {
+                this.y -= this.speedY;
+                if(this.y < -20) this.y = height + 20;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.font = `${this.size}px serif`;
+                ctx.fillText('❤', this.x, this.y);
+            }
+        }
+
+        function initParticles() {
+            for(let i=0; i<30; i++) particles.push(new Particle());
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        initParticles();
+        animateParticles();
+
+        /* --- STEP 1: START (Music Trigger) --- */
+        document.getElementById('start-btn').addEventListener('click', (e) => {
+            
+            // 1. Sabse pehle Music Play karein
+            const audio = document.getElementById('bg-music');
+            audio.volume = 0.5; // Volume thoda soft (50%)
+            
+            audio.play().catch(error => {
+                // Agar gaana na baje to ye error dikhayega console me
+                console.log("Playback failed. File check karein.", error);
+                alert("Gaana nahi chala! Check karein ki 'love.mp3' file same folder mein hai.");
+            });
+
+            // Music button ab dikhana shuru karein
+            document.getElementById('music-toggle').style.display = 'block';
+            state.musicPlaying = true;
+            
+            // 2. Button dabne ka effect (Particles)
+            createParticles(e.clientX, e.clientY, 50);
+
+            // 3. Agli Screen par jayein (Bouquet wali)
+            switchScreen('bouquet-screen');
+            setTimeout(() => {
+                document.getElementById('bouquet').style.transform = 'scale(1)';
+            }, 100);
+        });
+
+    </script>
+</body>
+</html>
